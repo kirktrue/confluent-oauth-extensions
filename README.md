@@ -2,7 +2,17 @@
 
 Apache Kafka client library providing additional integrations relating to OAuth/OIDC integrations with Confluent Cloud and Apache Kafka.
 
-## Authenticating to Confluent Cloud via OAuth, using Azure Managed Identites
+## Building
+
+The project uses Gradle, so the standard build command should be used:
+
+```shell
+./gradlew jar
+```
+
+The library will be generated and written to `build/libs/confluent-oauth-extensions-x.y.jar`
+
+## Authenticating to Confluent Cloud via OAuth, using Azure Managed Identities
 
 Example Kafka client config and JAAS config:
 

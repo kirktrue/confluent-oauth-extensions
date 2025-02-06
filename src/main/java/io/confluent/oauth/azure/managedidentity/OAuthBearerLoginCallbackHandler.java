@@ -237,7 +237,7 @@ public class OAuthBearerLoginCallbackHandler implements AuthenticateCallbackHand
         if (jou.shouldCreateSSLSocketFactory(tokenEndpointUrl))
             sslSocketFactory = jou.createSSLSocketFactory();
 
-        io.confluent.oauth.HttpAccessTokenRetriever httpAccessTokenRetriever = new io.confluent.oauth.HttpAccessTokenRetriever(clientId,
+        HttpAccessTokenRetriever httpAccessTokenRetriever = new HttpAccessTokenRetriever(clientId,
                 clientSecret,
                 scope,
                 sslSocketFactory,

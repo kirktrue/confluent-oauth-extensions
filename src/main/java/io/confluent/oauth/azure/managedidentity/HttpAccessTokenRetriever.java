@@ -19,7 +19,7 @@
  * clients/src/main/java/org/apache/kafka/common/security/oauthbearer/secured/HttpAccessTokenRetriever.java
  */
 
-package io.confluent.oauth;
+package io.confluent.oauth.azure.managedidentity;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -53,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>HttpAccessTokenRetriever</code> is an {@link AccessTokenRetriever} copied and derived from Apacha Kafka
+ * <code>HttpAccessTokenRetriever</code> is an {@link AccessTokenRetriever} copied and derived from Apache Kafka
  * {@link org.apache.kafka.common.security.oauthbearer.internals.secured.HttpAccessTokenRetriever}.
  *
  * This version is designed to work with Azure Managed Identities via the link-local Instance Metadata Service (IMDS).
@@ -162,7 +161,7 @@ public class HttpAccessTokenRetriever implements AccessTokenRetriever {
     @Override
     public String retrieve() throws IOException {
         String authorizationHeader = formatAuthorizationHeader(clientId, clientSecret);
-        String requestBody = requestMethod == "GET" ? null : formatRequestBody(scope);
+        String requestBody = requestMethod.equals("GET") ? null : formatRequestBody(scope);
         Retry<String> retry = new Retry<>(loginRetryBackoffMs, loginRetryBackoffMaxMs);
 
         final Map<String, String> requestHeaders = new HashMap<>(headers);
@@ -265,7 +264,7 @@ public class HttpAccessTokenRetriever implements AccessTokenRetriever {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             log.debug("handleOutput - preparing to read response body from {}", con.getURL());
             copy(is, os);
-            responseBody = os.toString(StandardCharsets.UTF_8.name());
+            responseBody = os.toString(StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.warn("handleOutput - error retrieving data", e);
         }
@@ -332,22 +331,17 @@ public class HttpAccessTokenRetriever implements AccessTokenRetriever {
         return String.format("Basic %s", encoded);
     }
 
-    static String formatRequestBody(String scope) throws IOException {
-        try {
-            StringBuilder requestParameters = new StringBuilder();
-            requestParameters.append("grant_type=client_credentials");
+    static String formatRequestBody(String scope) {
+        StringBuilder requestParameters = new StringBuilder();
+        requestParameters.append("grant_type=client_credentials");
 
-            if (scope != null && !scope.trim().isEmpty()) {
-                scope = scope.trim();
-                String encodedScope = URLEncoder.encode(scope, StandardCharsets.UTF_8.name());
-                requestParameters.append("&scope=").append(encodedScope);
-            }
-
-            return requestParameters.toString();
-        } catch (UnsupportedEncodingException e) {
-            // The world has gone crazy!
-            throw new IOException(String.format("Encoding %s not supported", StandardCharsets.UTF_8.name()));
+        if (scope != null && !scope.trim().isEmpty()) {
+            scope = scope.trim();
+            String encodedScope = URLEncoder.encode(scope, StandardCharsets.UTF_8);
+            requestParameters.append("&scope=").append(encodedScope);
         }
+
+        return requestParameters.toString();
     }
 
     private static String sanitizeString(String name, String value) {
